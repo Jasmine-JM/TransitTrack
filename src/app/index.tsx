@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
 
+import { router } from 'expo-router';
 import { useState } from 'react';
 
 import {
@@ -12,23 +12,28 @@ import {
   Switch,
   Text,
   TextInput,
-  View
+  View,
 } from 'react-native';
+
+type AccountType = 'commuter' | 'driver';
 
 export default function Index() {
   const [emailOrMobile, setEmailOrMobile] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] =
+    useState<AccountType>('commuter');
   const [message, setMessage] = useState('');
 
+  // SIGN IN
   const handleSignIn = () => {
     const value = emailOrMobile.trim();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const mobileRegex = /^[0-9]{10,15}$/;
 
-    if (value.length === 0) {
+    if (!value) {
       setMessage('Please enter your email or mobile number.');
       return;
     }
@@ -38,7 +43,7 @@ export default function Index() {
       return;
     }
 
-    if (password.trim().length === 0) {
+    if (!password.trim()) {
       setMessage('Please enter your password.');
       return;
     }
@@ -48,19 +53,29 @@ export default function Index() {
       return;
     }
 
-    router.replace('/home');
+    setMessage('');
+
+    // REDIRECT BASED ON ACCOUNT TYPE
+    if (selectedRole === 'driver') {
+      router.replace('/driver-home');
+    } else {
+      router.replace('/home');
+    }
   };
 
+  // FORGOT PASSWORD
   const handleForgotPassword = () => {
     router.push('/forgot-password');
   };
 
+  // GOOGLE SIGN IN
   const handleGoogleSignIn = () => {
-    setMessage('Google sign-in selected.');
+    setMessage('Google sign-in has not been connected yet.');
   };
 
+  // SIGN UP
   const handleSignUp = () => {
-    setMessage('Sign up selected.');
+    router.push('/register');
   };
 
   const appContent = (
@@ -71,25 +86,137 @@ export default function Index() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.container}>
-          {/* Logo */}
+
+          {/* LOGO */}
           <Image
             source={require('../../assets/images/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
 
-          {/* App title */}
-          <Text style={styles.appTitle}>TransitTrack</Text>
-
-          {/* Subtitle */}
-          <Text style={styles.subtitle}>
-            Sign in to access your saved routes &{'\n'}commute alerts
+          {/* APP TITLE */}
+          <Text style={styles.appTitle}>
+            TransitTrack
           </Text>
 
-          {/* Login Card */}
+          <Text style={styles.subtitle}>
+            Sign in to access your saved routes &{'\n'}
+            commute alerts
+          </Text>
+
+          {/* LOGIN CARD */}
           <View style={styles.loginCard}>
-            {/* Email / Mobile */}
-            <Text style={styles.label}>Email or Mobile Number</Text>
+
+            {/* ACCOUNT TYPE SELECTOR */}
+            <Text style={styles.roleHeading}>
+              SIGN IN AS
+            </Text>
+
+            <View style={styles.roleSelector}>
+
+              {/* COMMUTER */}
+              <Pressable
+                style={[
+                  styles.roleOption,
+                  selectedRole === 'commuter' &&
+                    styles.roleOptionActive,
+                ]}
+                onPress={() => {
+                  setSelectedRole('commuter');
+                  setMessage('');
+                }}
+                accessibilityRole="radio"
+                accessibilityState={{
+                  selected: selectedRole === 'commuter',
+                }}
+              >
+                <Image
+                  source={require('../../assets/images/logo.png')}
+                  style={[
+                    styles.roleIcon,
+                    selectedRole !== 'commuter' &&
+                      styles.inactiveRoleIcon,
+                  ]}
+                  resizeMode="contain"
+                />
+
+                <Text
+                  style={[
+                    styles.roleText,
+                    selectedRole === 'commuter' &&
+                      styles.roleTextActive,
+                  ]}
+                >
+                  Commuter
+                </Text>
+
+                {selectedRole === 'commuter' && (
+                  <View style={styles.selectedIndicator}>
+                    <Text style={styles.selectedIndicatorText}>
+                      ✓
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+
+              {/* DRIVER */}
+              <Pressable
+                style={[
+                  styles.roleOption,
+                  selectedRole === 'driver' &&
+                    styles.roleOptionActive,
+                ]}
+                onPress={() => {
+                  setSelectedRole('driver');
+                  setMessage('');
+                }}
+                accessibilityRole="radio"
+                accessibilityState={{
+                  selected: selectedRole === 'driver',
+                }}
+              >
+                <Image
+                  source={require('../../assets/images/logo.png')}
+                  style={[
+                    styles.roleIcon,
+                    selectedRole !== 'driver' &&
+                      styles.inactiveRoleIcon,
+                  ]}
+                  resizeMode="contain"
+                />
+
+                <Text
+                  style={[
+                    styles.roleText,
+                    selectedRole === 'driver' &&
+                      styles.roleTextActive,
+                  ]}
+                >
+                  Driver
+                </Text>
+
+                {selectedRole === 'driver' && (
+                  <View style={styles.selectedIndicator}>
+                    <Text style={styles.selectedIndicatorText}>
+                      ✓
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+
+            </View>
+
+            {/* ACCOUNT DESCRIPTION */}
+            <Text style={styles.roleDescription}>
+              {selectedRole === 'commuter'
+                ? 'Access your routes, saved trips, and commute alerts.'
+                : 'Access your driving schedule, assigned trips, and route updates.'}
+            </Text>
+
+            {/* EMAIL / MOBILE */}
+            <Text style={styles.label}>
+              Email or Mobile Number
+            </Text>
 
             <View style={styles.inputContainer}>
               <Image
@@ -113,9 +240,11 @@ export default function Index() {
               />
             </View>
 
-            {/* Password label */}
+            {/* PASSWORD LABEL */}
             <View style={styles.passwordLabelRow}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>
+                Password
+              </Text>
 
               <Pressable onPress={handleForgotPassword}>
                 <Text style={styles.forgotPassword}>
@@ -124,7 +253,7 @@ export default function Index() {
               </Pressable>
             </View>
 
-            {/* Password */}
+            {/* PASSWORD INPUT */}
             <View style={styles.inputContainer}>
               <Image
                 source={require('../../assets/images/lock.png')}
@@ -149,6 +278,9 @@ export default function Index() {
               <Pressable
                 style={styles.eyeButton}
                 onPress={() => setShowPassword(!showPassword)}
+                accessibilityLabel={
+                  showPassword ? 'Hide password' : 'Show password'
+                }
               >
                 <Image
                   source={
@@ -162,7 +294,7 @@ export default function Index() {
               </Pressable>
             </View>
 
-            {/* Remember me */}
+            {/* REMEMBER ME */}
             <View style={styles.rememberRow}>
               <Switch
                 value={rememberMe}
@@ -179,7 +311,7 @@ export default function Index() {
               </Text>
             </View>
 
-            {/* Sign In */}
+            {/* SIGN IN BUTTON */}
             <Pressable
               style={({ pressed }) => [
                 styles.signInButton,
@@ -188,18 +320,20 @@ export default function Index() {
               onPress={handleSignIn}
             >
               <Text style={styles.signInText}>
-                Sign In
+                Sign In as {selectedRole === 'commuter'
+                  ? 'Commuter'
+                  : 'Driver'}
               </Text>
             </Pressable>
 
-            {/* Message */}
+            {/* MESSAGE */}
             {message !== '' && (
               <Text style={styles.messageText}>
                 {message}
               </Text>
             )}
 
-            {/* Divider */}
+            {/* DIVIDER */}
             <View style={styles.orRow}>
               <View style={styles.orLine} />
 
@@ -210,7 +344,7 @@ export default function Index() {
               <View style={styles.orLine} />
             </View>
 
-            {/* Google */}
+            {/* GOOGLE */}
             <Pressable
               style={({ pressed }) => [
                 styles.googleButton,
@@ -228,9 +362,10 @@ export default function Index() {
                 Google
               </Text>
             </Pressable>
+
           </View>
 
-          {/* Sign up */}
+          {/* SIGN UP */}
           <View style={styles.signupRow}>
             <Text style={styles.signupText}>
               Don't have an account?
@@ -243,7 +378,7 @@ export default function Index() {
             </Pressable>
           </View>
 
-          {/* Policy */}
+          {/* POLICY */}
           <Text style={styles.policyText}>
             By continuing, you agree to the{' '}
 
@@ -259,17 +394,14 @@ export default function Index() {
 
             .
           </Text>
+
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 
   /*
-   * WEB
-   *
-   * On desktop, show the app inside a phone-sized frame.
-   *
-   * On an actual phone / native app, render normally.
+   * WEB PHONE FRAME
    */
   if (Platform.OS === 'web') {
     return (
@@ -285,12 +417,10 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  /*
-   * --------------------------------------------------
-   * WEB PHONE FRAME
-   * --------------------------------------------------
-   */
 
+  /*
+   * WEB PHONE FRAME
+   */
   webBackground: {
     flex: 1,
     minHeight: '100vh' as any,
@@ -301,28 +431,25 @@ const styles = StyleSheet.create({
   },
 
   phoneFrame: {
-  width: 390,
-  height: 844,
-  maxWidth: 'calc(100vw - 48px)' as any,
-  maxHeight: 'calc(100vh - 48px)' as any,
-  overflow: 'hidden',
-  borderRadius: 42,
-  borderWidth: 8,
-  borderColor: '#111827',
-  backgroundColor: '#F7F9FC',
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 12 },
-  shadowOpacity: 0.2,
-  shadowRadius: 30,
-  elevation: 10,
-},
+    width: 390,
+    height: 844,
+    maxWidth: 'calc(100vw - 48px)' as any,
+    maxHeight: 'calc(100vh - 48px)' as any,
+    overflow: 'hidden',
+    borderRadius: 42,
+    borderWidth: 8,
+    borderColor: '#111827',
+    backgroundColor: '#F7F9FC',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 30,
+    elevation: 10,
+  },
 
   /*
-   * --------------------------------------------------
    * MAIN APP
-   * --------------------------------------------------
    */
-
   safeArea: {
     flex: 1,
     backgroundColor: '#F8F9FC',
@@ -342,11 +469,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * LOGO
-   * --------------------------------------------------
    */
-
   logo: {
     width: 92,
     height: 92,
@@ -354,11 +478,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * TITLE
-   * --------------------------------------------------
    */
-
   appTitle: {
     fontSize: 32,
     lineHeight: 38,
@@ -377,11 +498,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * LOGIN CARD
-   * --------------------------------------------------
    */
-
   loginCard: {
     width: '100%',
     backgroundColor: '#FFFFFF',
@@ -393,11 +511,89 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
-   * LABELS
-   * --------------------------------------------------
+   * ACCOUNT TYPE SELECTOR
    */
+  roleHeading: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: '#454C59',
+    marginBottom: 10,
+  },
 
+  roleSelector: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+
+  roleOption: {
+    flex: 1,
+    minHeight: 62,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#DDE1E7',
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingHorizontal: 8,
+    position: 'relative',
+  },
+
+  roleOptionActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#0875E8',
+  },
+
+  roleIcon: {
+    width: 23,
+    height: 23,
+  },
+
+  inactiveRoleIcon: {
+    opacity: 0.55,
+  },
+
+  roleText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#737985',
+  },
+
+  roleTextActive: {
+    color: '#0875E8',
+  },
+
+  selectedIndicator: {
+    position: 'absolute',
+    top: 4,
+    right: 5,
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    backgroundColor: '#0875E8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  selectedIndicatorText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  roleDescription: {
+    fontSize: 11,
+    lineHeight: 17,
+    color: '#737985',
+    marginTop: 9,
+    marginBottom: 20,
+  },
+
+  /*
+   * LABELS
+   */
   label: {
     fontSize: 15,
     lineHeight: 20,
@@ -419,11 +615,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * INPUTS
-   * --------------------------------------------------
    */
-
   inputContainer: {
     width: '100%',
     minHeight: 56,
@@ -461,11 +654,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * REMEMBER ME
-   * --------------------------------------------------
    */
-
   rememberRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -480,11 +670,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * SIGN IN BUTTON
-   * --------------------------------------------------
    */
-
   signInButton: {
     width: '100%',
     minHeight: 56,
@@ -496,7 +683,7 @@ const styles = StyleSheet.create({
 
   signInText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
   },
 
@@ -505,11 +692,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * MESSAGE
-   * --------------------------------------------------
    */
-
   messageText: {
     color: '#2864E8',
     fontSize: 13,
@@ -519,11 +703,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * OR DIVIDER
-   * --------------------------------------------------
    */
-
   orRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -545,11 +726,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * GOOGLE BUTTON
-   * --------------------------------------------------
    */
-
   googleButton: {
     width: '100%',
     minHeight: 56,
@@ -574,11 +752,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * SIGN UP
-   * --------------------------------------------------
    */
-
   signupRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -599,11 +774,8 @@ const styles = StyleSheet.create({
   },
 
   /*
-   * --------------------------------------------------
    * TERMS / PRIVACY
-   * --------------------------------------------------
    */
-
   policyText: {
     fontSize: 11,
     lineHeight: 17,
